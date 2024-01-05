@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import 'getResponseFromApi.dart';
+import 'FooocusApi.dart';
 
 void main() => runApp(const MaterialApp(home: MyImageWidget()));
 
@@ -14,7 +13,7 @@ class MyImageWidget extends StatefulWidget {
 }
 
 class _MyImageWidgetState extends State<MyImageWidget> {
-  String? _imageBytes;
+  String? _imageUrl;
   String? _errorMessage;
   final TextEditingController _queryController = TextEditingController();
   final TextEditingController _urlController = TextEditingController();
@@ -24,11 +23,11 @@ class _MyImageWidgetState extends State<MyImageWidget> {
   void initState() {
     super.initState();
     _initPreferences();
-    _loadSettings();
   }
 
   Future<void> _initPreferences() async {
     _prefs = await SharedPreferences.getInstance();
+    _loadSettings();
   }
 
   Future<void> _loadSettings() async {
@@ -50,14 +49,14 @@ class _MyImageWidgetState extends State<MyImageWidget> {
     await _saveSettings();
 
     setState(() {
-      _imageBytes = null;
+      _imageUrl = null;
       _errorMessage = null;
     });
 
     try {
-      final bytes = await getResponseFromApi(query, apiUrl);
+      final imageUrl = await getImgFromFooocuseApi(query);
       setState(() {
-        _imageBytes = bytes;
+        _imageUrl = imageUrl;
       });
     } catch (e) {
       setState(() {
@@ -146,8 +145,8 @@ class _MyImageWidgetState extends State<MyImageWidget> {
               const SizedBox(height: 20),
               Expanded(
                 child: Center(
-                  child: _imageBytes != null
-                      ? Image.memory(base64Decode(_imageBytes!))
+                  child: _imageUrl != null
+                      ? Image.network(_imageUrl!)
                       : _errorMessage != null
                           ? Text(
                               _errorMessage!,
